@@ -1,0 +1,26 @@
+mkdir jenkins-cli
+cd jenkins-cli
+wget http://34.31.164.49:8080/jnlpJars/jenkins-cli.jar
+
+java -jar jenkins-cli.jar -s http://34.31.164.49:8080 -auth devops:Devops@123 who-am-i
+java -jar jenkins-cli.jar -s http://34.31.164.49:8080 -auth devops:Devops@123 list-jobs
+java -jar jenkins-cli.jar -s http://34.31.164.49:8080 -auth devops:Devops@123 get-job job_name
+java -jar jenkins-cli.jar -s http://34.31.164.49:8080 -auth devops:Devops@123 build job_name
+
+Steps to configure Jenkins CLI without Password
+First generate a keypair from the desired VM
+ssh-keygen -t id_rsa
+cd ./ssh
+cat id_rsa.pub
+Copy id_rsa.pub contents
+
+Go to User Settings in Jenkins
+Under Security, copy the contents of the public key in the section where it asks to provide the key
+
+Go to Manage > Security > SSH Server
+Configure Jenkins fixed port something different than 22. Like 2222
+
+ssh -l devops -p 2222 34.31.164.49 who-am-i
+ssh -l devops -p 2222 34.31.164.49 list-jobs
+ssh -l devops -p 2222 34.31.164.49 build job_name
+ssh -l devops -p 2222 34.31.164.49 console job_name build_number
