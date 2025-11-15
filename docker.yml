@@ -1,0 +1,10 @@
+docker build -t bheeshamdevops/java-application:v$BUILD_NUMBER .
+docker tag bheeshamdevops/java-application:v$BUILD_NUMBER bheeshamdevops/java-application:latest
+docker push bheeshamdevops/java-application:v$BUILD_NUMBER
+docker push bheeshamdevops/java-application:latest
+
+Docker Host - Application Hosting
+
+docker rm -f java-application
+docker rmi -f bheeshamdevops/java-application:latest
+docker run -d --name java-application -p 8080:8080 bheeshamdevops/java-application:latest
