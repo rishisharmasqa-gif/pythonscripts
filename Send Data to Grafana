@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# ----------------------------
+# CONFIG
+# ----------------------------
+INFLUX_URL="http://localhost:8181/api/v2/write?bucket=server_metrics&precision=ns"
+INFLUX_TOKEN="apiv3_rsoMjDN57QHUTrG72WGyF3xG4g4jq3KanP78hUJdCyvdCkgAFMbzTQ8XgvWlfInzw93gkHXqm3yoAAkPZGiwGw"
+HOST=$(hostname)
+
+# ----------------------------
+# COLLECT METRICS
+# ----------------------------
+
+# CPU %
+cpu=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4}')
+
+# RAM
+ram_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+ram_free=$(grep MemFree /proc/meminfo | awk '{print $2}')
+ram_used=$((ram_total - ram_free))
+
+# LOAD
+load1=$(awk '{print $1}' /proc/loadavg)
+load5=$(awk '{print $2}' /proc/loadavg)
+load15=$(awk '{print $3}' /proc/loadavg)
+
+# DISK
+disk_used=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
+
+# NETWORK
+net_rx=$(cat /sys/class/net/eth0/statistics/rx_bytes 2>/dev/null || echo 0)
+net_tx=$(cat /sys/class/net/eth0/statistics/tx_bytes 2>/dev/null || echo 0)
+
+# TEMP
+temp=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
+temp=$((temp/1000))
+
+timestamp=$(date +%s%N)
+
+# ----------------------------
+# LINE PROTOCOL
+# ----------------------------
+line_protocol="linux_metrics,host=$HOST cpu=$cpu,ram_used=$ram_used,ram_total=$ram_total,load1=$load1,load5=$load5,load15=$load15,disk_used=$disk_used,net_rx=$net_rx,net_tx=$net_tx,temp=$temp $timestamp"
+
+# ----------------------------
+# SEND TO INFLUXDB 3
+# ----------------------------
+curl -s -XPOST "$INFLUX_URL" \
+  -H "Authorization: Token $INFLUX_TOKEN" \
+  -H "Content-Type: text/plain; charset=utf-8" \
+  --data-raw "$line_protocol"
